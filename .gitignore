@@ -2,3 +2,5 @@
 **/*.rs.bk
 notes.md
 testing/
+migrations/
+docker-compose.yml

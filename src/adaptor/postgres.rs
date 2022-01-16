@@ -3,12 +3,12 @@ use crate::errors::{Error, Result};
 use crate::migration::{Migration, MigrationBuilder};
 
 impl DbAdaptor for postgres::Client {
-    fn init_up_sql(&self) -> &'static str {
-        INIT_UP_SQL
-    }
-
-    fn init_down_sql(&self) -> &'static str {
-        INIT_DOWN_SQL
+    fn init(&mut self) -> Result<()> {
+        if self.batch_execute(CHECK_MIGRATIONS_TABLE).is_err() {
+            debug!("Table movine_migrations does not exist, creating...");
+            self.batch_execute(INIT_UP_SQL)?;
+        };
+        Ok(())
     }
 
     fn load_migrations(&mut self) -> Result<Vec<Migration>> {
@@ -41,7 +41,7 @@ impl DbAdaptor for postgres::Client {
         let down_sql = migration.down_sql.as_ref().unwrap_or(&empty_string);
 
         let mut transaction = self.transaction()?;
-        transaction.batch_execute(&up_sql)?;
+        transaction.batch_execute(up_sql)?;
         transaction.execute(LOG_UP_MIGRATION, &[&name, &hash, &down_sql])?;
         transaction.commit()?;
         Ok(())
@@ -52,7 +52,7 @@ impl DbAdaptor for postgres::Client {
         let down_sql = migration.down_sql.as_ref().ok_or(Error::BadMigration)?;
 
         let mut transaction = self.transaction()?;
-        transaction.batch_execute(&down_sql)?;
+        transaction.batch_execute(down_sql)?;
         transaction.execute(LOG_DOWN_MIGRATION, &[&name])?;
         transaction.commit()?;
         Ok(())
@@ -69,8 +69,12 @@ DELETE FROM movine_migrations
 WHERE name = $1;
 ";
 
+pub const CHECK_MIGRATIONS_TABLE: &str = "\
+SELECT * FROM movine_migrations WHERE false;
+";
+
 pub const INIT_UP_SQL: &str = "\
-CREATE TABLE movine_migrations (
+CREATE TABLE IF NOT EXISTS movine_migrations (
     id SERIAL PRIMARY KEY,
     created_at TIMESTAMP DEFAULT now(),
     updated_at TIMESTAMP DEFAULT now(),
@@ -78,8 +82,4 @@ CREATE TABLE movine_migrations (
     hash TEXT NOT NULL,
     down_sql TEXT
 );
-";
-
-pub const INIT_DOWN_SQL: &str = "\
-DROP TABLE movine_migrations;
 ";

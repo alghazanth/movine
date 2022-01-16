@@ -9,10 +9,6 @@ use cli::Opt;
 
 fn main() -> Result<()> {
     match Opt::from_args() {
-        Opt::Init { debug } => {
-            let mut movine = setup(debug)?;
-            movine.initialize()
-        }
         Opt::Generate { name, debug } => {
             let mut movine = setup(debug)?;
             movine.generate(&name)
@@ -68,7 +64,6 @@ fn main() -> Result<()> {
             let mut movine = setup(debug)?;
             movine.set_show_plan(show_plan).fix()
         }
-        _ => unimplemented!(),
     }
 }
 
@@ -82,7 +77,7 @@ fn setup(debug: bool) -> Result<Movine<Box<dyn DbAdaptor>>> {
         })
         .init();
 
-    let config = Config::load(&"movine.toml")?;
+    let config = Config::load()?;
     let adaptor = config.into_db_adaptor()?;
     let movine = Movine::new(adaptor);
     Ok(movine)

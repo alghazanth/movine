@@ -78,8 +78,8 @@ impl MigrationBuilder {
         let name = if let Some(compound_name) = &self.compound_name {
             compound_name.to_owned()
         } else {
-            let name = self.name.to_owned().ok_or(Error::BadMigration)?;
-            let date = self.date.to_owned().ok_or(Error::BadMigration)?;
+            let name = self.name.as_ref().ok_or(Error::BadMigration)?;
+            let date = self.date.as_ref().ok_or(Error::BadMigration)?;
             let date = date.format("%Y-%m-%d-%H%M%S").to_string();
             format!("{}_{}", date, name)
         };

@@ -1,7 +1,4 @@
-use libsqlite3_sys::Error as SqliteLibError;
-use libsqlite3_sys::ErrorCode as SqliteLibErrorCode;
 use postgres::error::Error as PostgresError;
-use rusqlite::Error as SqliteError;
 use std::error::Error as StdError;
 use std::fmt;
 use std::io;
@@ -31,7 +28,6 @@ pub enum Error {
     IoError(io::Error),
     TomlError(TomlError),
     PgError(PostgresError),
-    SqliteError(SqliteError),
     Envy(envy::Error),
     #[cfg(feature = "with-native-tls")]
     NativeTlsError(native_tls::Error),
@@ -45,7 +41,7 @@ impl fmt::Debug for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use Error::*;
         match self {
-            ConfigNotFound => write!(f, "`movine.toml` config file not found and no environment variables were found."),
+            ConfigNotFound => write!(f, "No environment variables were found."),
             BadMigration => write!(f, "Error parsing migrations."),
             Unknown => write!(f, "Unknown error occurred"),
             AdaptorNotFound => write!(f, "Could not find adaptor"),
@@ -56,15 +52,6 @@ impl fmt::Debug for Error {
             IoError(e) => write!(f, "IO Error: {}", e),
             TomlError(e) => write!(f, "Unable to read config file: {}", e),
             PgError(e) => write!(f, "Error in Postgres: {}", e),
-            SqliteError(e) => {
-                match e {
-                    rusqlite::Error::SqliteFailure(SqliteLibError { code: SqliteLibErrorCode::APIMisuse, .. }, _) => {
-                        write!(f, "Error in Sqlite: {}.", e)?;
-                        write!(f, "\nThis is likely due to an invalid SQL statement, such as an empty UP or DOWN migration.")
-                    }
-                    _ => write!(f, "Error in Sqlite: {}", e),
-                }
-            }
             Envy(e) => write!(f, "Error in loading environment variables: {}", e),
             #[cfg(feature = "with-native-tls")]
             NativeTlsError(e) => write!(f, "Error in TLS: {}", e),
@@ -104,12 +91,6 @@ impl From<TomlError> for Error {
 impl From<PostgresError> for Error {
     fn from(error: PostgresError) -> Self {
         Error::PgError(error)
-    }
-}
-
-impl From<SqliteError> for Error {
-    fn from(error: SqliteError) -> Self {
-        Error::SqliteError(error)
     }
 }
 

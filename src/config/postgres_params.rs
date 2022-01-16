@@ -22,7 +22,7 @@ impl TryFrom<&[&RawPostgresParams]> for PostgresParams {
                 acc.user = x.user.to_owned().or(acc.user);
                 acc.password = x.password.to_owned().or(acc.password);
                 acc.host = x.host.to_owned().or(acc.host);
-                acc.database = x.database.to_owned().or(acc.database);
+                acc.db = x.db.to_owned().or(acc.db);
                 acc.port = x.port.to_owned().or(acc.port);
                 acc.sslcert = x.sslcert.to_owned().or(acc.sslcert);
                 acc
@@ -32,7 +32,7 @@ impl TryFrom<&[&RawPostgresParams]> for PostgresParams {
             RawPostgresParams {
                 user: Some(user),
                 password,
-                database: Some(database),
+                db: Some(database),
                 host: Some(host),
                 port: Some(port),
                 sslcert,
@@ -47,7 +47,7 @@ impl TryFrom<&[&RawPostgresParams]> for PostgresParams {
             p => Err(Error::PgParamError {
                 user: p.user.is_some(),
                 password: p.password.is_some(),
-                database: p.database.is_some(),
+                database: p.db.is_some(),
                 host: p.host.is_some(),
                 port: p.port.is_some(),
             }),
@@ -60,14 +60,14 @@ pub struct RawPostgresParams {
     pub user: Option<String>,
     pub password: Option<String>,
     pub host: Option<String>,
-    pub database: Option<String>,
+    pub db: Option<String>,
     pub port: Option<i32>,
     pub sslcert: Option<String>,
 }
 
 impl RawPostgresParams {
     pub fn load_from_env() -> Result<Self> {
-        let params = envy::prefixed("PG").from_env()?;
+        let params = envy::prefixed("POSTGRES_").from_env()?;
         Ok(params)
     }
 
@@ -75,7 +75,7 @@ impl RawPostgresParams {
         self.user.is_some()
             || self.password.is_some()
             || self.host.is_some()
-            || self.database.is_some()
+            || self.db.is_some()
             || self.port.is_some()
     }
 }
@@ -86,7 +86,7 @@ impl Default for RawPostgresParams {
             user: None,
             password: None,
             host: None,
-            database: None,
+            db: None,
             port: Some(5432),
             sslcert: None,
         }

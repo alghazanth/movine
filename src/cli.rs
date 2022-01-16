@@ -91,20 +91,6 @@ pub enum Opt {
         debug: bool,
     },
 
-    #[structopt(name = "custom")]
-    /// [unimplemented]
-    Custom {
-        #[structopt(short = "p", long = "plan")]
-        /// Do a dry run and show the migration plan.
-        show_plan: bool,
-
-        #[structopt(short = "v", long = "verbose")]
-        /// Run with verbose logging
-        debug: bool,
-
-        plan: Vec<String>,
-    },
-
     #[structopt(name = "generate")]
     /// Generate a migration with a given name.
     Generate {
@@ -113,13 +99,5 @@ pub enum Opt {
         debug: bool,
 
         name: String,
-    },
-
-    #[structopt(name = "init")]
-    /// Initialize the database and the local migration directory.
-    Init {
-        #[structopt(short = "v", long = "verbose")]
-        /// Run with verbose logging
-        debug: bool,
     },
 }

@@ -17,14 +17,6 @@ impl FileHandler {
         }
     }
 
-    pub fn create_migration_directory(&self) -> Result<()> {
-        let exists = self.migration_dir.exists();
-        if !exists {
-            fs::create_dir(&self.migration_dir)?;
-        }
-        Ok(())
-    }
-
     pub fn write_migration(&self, migration: &Migration) -> Result<()> {
         let name = migration.name.clone().into();
         let folder: PathBuf = [&self.migration_dir, &name].iter().collect();
